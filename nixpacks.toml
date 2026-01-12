@@ -1,9 +1,9 @@
 # Nixpacks configuration for Python backend
 [phases.setup]
-nixPkgs = ["python313Full"]
+nixPkgs = ["python312", "python312Packages.pip"]
 
 [phases.install]
-cmds = ["pip install -r requirements.txt"]
+cmds = ["python3 -m pip install -r requirements.txt"]
 
 [phases.build]
 cmds = ["echo 'Build complete'"]
