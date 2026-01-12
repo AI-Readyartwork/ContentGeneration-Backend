@@ -1,9 +1,7 @@
 # Railway configuration for Backend (FastAPI)
 [build]
 builder = "nixpacks"
-
-[build.nixpacks]
-providers = ["python"]
+watchPatterns = ["*.py", "requirements.txt"]
 
 [deploy]
 startCommand = "uvicorn main:app --host 0.0.0.0 --port $PORT"
