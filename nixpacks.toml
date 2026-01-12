@@ -1,6 +1,6 @@
 # Nixpacks configuration for Python backend
 [phases.setup]
-nixPkgs = ["python313", "pip"]
+nixPkgs = ["python313Full"]
 
 [phases.install]
 cmds = ["pip install -r requirements.txt"]
