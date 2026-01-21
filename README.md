@@ -1,6 +1,20 @@
 # Newsletter AI Backend
 
-FastAPI backend with OpenAI integration for AI-powered newsletter generation.
+FastAPI-based backend service for the Editorial Digest Newsletter Generator. It powers the AI content generation, summarization, and integration with third-party services.
+
+## Features
+
+- **AI Content Generation**: Utilizes OpenAI (via LangChain) to generate newsletter summaries, headlines, and "Notes from the Editor".
+- **Smart Summarization**: Context-aware summarization of news articles.
+- **RESTful API**: Clean and documented API endpoints for the frontend.
+- **CORS Support**: Configured for secure cross-origin requests from the frontend.
+
+## Tech Stack
+
+- **Framework**: FastAPI
+- **Server**: Uvicorn
+- **AI/LLM**: LangChain, OpenAI API
+- **Language**: Python 3.9+
 
 ## Setup
 
@@ -27,17 +41,13 @@ pip install -r requirements.txt
 Copy `.env.example` to `.env` and fill in your credentials:
 
 ```bash
-# Windows
-copy .env.example .env
-
-# Linux/Mac
 cp .env.example .env
 ```
 
 Required environment variables:
-- `OPENAI_API_KEY` - Your OpenAI API key (required)
-- `SUPABASE_URL` - Your Supabase project URL (optional)
-- `SUPABASE_KEY` - Your Supabase API key (optional)
+- `OPENAI_API_KEY`: Your OpenAI API key.
+- `SUPABASE_URL`: (Optional) For database integrations.
+- `SUPABASE_KEY`: (Optional) For database integrations.
 
 ### 4. Run the Server
 
@@ -45,72 +55,38 @@ Required environment variables:
 # Development mode with auto-reload
 python main.py
 
-# Or using uvicorn directly
+# Or via uvicorn
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-The API will be available at `http://localhost:8000`
+The API will be available at `http://localhost:8000`.
 
 ## API Documentation
 
-Once running, visit:
-- Swagger UI: `http://localhost:8000/docs`
-- ReDoc: `http://localhost:8000/redoc`
+Once the server is running, you can access the interactive documentation:
+- **Swagger UI**: `http://localhost:8000/docs`
+- **ReDoc**: `http://localhost:8000/redoc`
+
+## API Endpoints
+
+### AI Services
+- `POST /api/ai/generate`: Generates specific content based on prompts.
+- `POST /api/ai/summarize`: Summarizes input text or articles.
+- `POST /api/ai/newsletter`: (If applicable) Generates full newsletter structure.
+
+### Utility
+- `GET /`: Root endpoint.
+- `GET /health`: Health check endpoint.
 
 ## Project Structure
 
 ```
 backend/
 ├── app/
-│   ├── __init__.py
-│   ├── config.py           # Configuration settings
-│   ├── api/
-│   │   ├── __init__.py
-│   │   └── ai_routes.py    # AI endpoints
-│   └── services/
-│       ├── __init__.py
-│       └── ai_service.py   # OpenAI AI service
-├── venv/                   # Virtual environment (not in git)
-├── .env                    # Environment variables (not in git)
-├── .env.example           # Example environment variables
-├── .gitignore
-├── main.py                # FastAPI application entry point
-├── requirements.txt       # Python dependencies
-└── README.md
+│   ├── api/            # Route handlers
+│   ├── services/       # Business logic and AI services
+│   └── main.py         # App entry point
+├── main.py             # Server entry point
+├── requirements.txt    # Dependencies
+└── README.md           # This file
 ```
-
-## API Endpoints
-
-### Health Check
-- `GET /` - Root endpoint
-- `GET /health` - Health check
-
-### AI Endpoints
-- `POST /api/ai/generate` - Generate AI content
-- `POST /api/ai/summarize` - Summarize text
-
-## Development
-
-### Adding New Routes
-
-1. Create a new route file in `app/api/`
-2. Import and include it in `app/api/__init__.py`
-
-### Adding New Services
-
-1. Create a new service file in `app/services/`
-2. Import and use it in your routes
-
-## Dependencies
-
-- **FastAPI** - Modern web framework
-- **Uvicorn** - ASGI server
-- **OpenAI** - OpenAI API client
-- **Pydantic** - Data validation
-- **python-dotenv** - Environment variable management
-
-## Notes
-
-- The backend uses OpenAI's API directly (no LangChain) to avoid compilation issues on Windows
-- All dependencies are pure Python packages (no C/Rust compilation required)
-- CORS is configured to allow requests from `http://localhost:5173` and `http://localhost:3000`

@@ -51,16 +51,22 @@ class AIService:
         """Generate a catchy hook-style title using LangChain"""
         date_context = get_current_date_context()
         prompt = ChatPromptTemplate.from_messages([
-            ("system", f"""{date_context}
+             ("system", f"""{date_context}
 
-You are an expert copywriter specializing in hook-style headlines for digital marketing newsletters. 
-Transform headlines into magnetic, click-worthy titles using power words, drama, intrigue, numbers, or questions. Keep under 10 words. 
-Use current year ({datetime.now().year}) if mentioning dates. 
+You are an expert newsletter headline writer. Transform headlines into compelling, click-worthy titles that sound natural and human-written.
 
-Return ONLY the new headline, nothing else."""),
-            ("user", "Rewrite this headline to be more catchy and attention-grabbing:\n\n{title}")
+RULES:
+- Keep it under 10 words
+- Use power words, numbers, or intriguing questions
+- Make it conversational and punchy
+- Reference {datetime.now().year} if mentioning dates
+- Avoid clichés like "game-changer" or "revolutionary"
+- NO em dashes (—), NO colons in the middle, NO unnecessary punctuation
+- Sound like a real person wrote it, not AI
+
+Return ONLY the rewritten headline."""),
+            ("user", "Rewrite this headline:\n\n{title}")
         ])
-        
         chain = prompt | self.llm | self.str_parser
         result = await chain.ainvoke({"title": original_title})
         return result.strip().strip('"')
@@ -71,14 +77,19 @@ Return ONLY the new headline, nothing else."""),
         prompt = ChatPromptTemplate.from_messages([
             ("system", f"""{date_context}
 
-You are a digital marketing newsletter writer. Create a compelling 1-2 sentence description that hooks the reader.
-Write clearly and simply. Use active voice. Avoid corporate buzzwords, —  dashes, and phrases like "delve into" or "furthermore." Every sentence should add value, not filler.
-GUIDELINES:
-- Be intriguing and create curiosity
-- Reference the main topic
-- Use active voice
-- Keep it under 20 words"""),
-            ("user", "Write a compelling description for a newsletter with this main story:\n\n{title}")
+You are writing the opening hook for a digital marketing newsletter. Create a compelling 1-2 sentence description that makes readers want to keep reading.
+
+STYLE:
+- Write like a human, not a robot
+- Be specific and intriguing
+- Use simple, direct language
+- Keep sentences short and punchy
+- Under 25 words total
+- NO em dashes (—), NO semicolons, NO overly formal language
+- NO phrases like: "delve into," "in today's landscape," "furthermore," "moreover"
+
+Just write the description naturally."""),
+            ("user", "Write a compelling intro for this newsletter topic:\n\n{title}")
         ])
         
         chain = prompt | self.llm | self.str_parser
@@ -98,53 +109,39 @@ GUIDELINES:
         prompt = ChatPromptTemplate.from_messages([
             ("system", f"""{date_context}
 
-You are a senior digital marketing journalist. Write a comprehensive, detailed summary of 150-200 words.
-Write clearly and simply. Use active voice. Avoid corporate buzzwords, —  dashes, and phrases like "delve into" or "furthermore." Every sentence should add value, not filler.
-REQUIREMENTS:
-- Write EXACTLY 100-130 words (this is critical - count your words!)
-- Expand on the news with relevant context and analysis
+You are a digital marketing journalist writing a newsletter summary. Write 150-200 words that inform and engage readers.
+
+WRITING STYLE:
+- Write like a knowledgeable human, not AI
+- Use short sentences (10-20 words each)
+- Be conversational but professional
+- Vary sentence structure naturally
+- Start some sentences with context or transition words naturally
+- No need to add title in starting
+FORBIDDEN PHRASES/STYLE:
+- NO em dashes (—)
+- NO semicolons
+- NO phrases like: "delve into," "dive into," "in today's landscape," "it's worth noting," "furthermore," "moreover," "additionally," "however" at sentence starts
+- NO overuse of "also," "as well," "in fact"
+- NO corporate buzzwords: "ecosystem," "synergy," "leverage," "robust," "seamlessly"
+
+MARKDOWN FORMATTING:
+- Use **bold** for 3-4 key terms or phrases only
+- Use natural paragraph breaks (leave a blank line between paragraphs)
+- Write in 2-3 short paragraphs
+- First paragraph: introduce the news clearly
+- Second paragraph: explain what it means and why it matters
+- Third paragraph (if needed): provide context or specific examples
+
+CONTENT REQUIREMENTS:
+- Word count: EXACTLY 150-200 words (critical!)
+- Focus on {current_year} - DO NOT mention 2024 or past years as current
+- Include specific details, data, or examples where possible
 - Explain the business impact for digital marketers
-- Include specific insights, data points, or examples where relevant
-- Use engaging, professional language
-- Format with 2-3 short paragraphs for readability
-- Use **bold** for key terms
+- Sound authoritative but accessible
 
-IMPORTANT: 
-- We are in {current_year}. Do NOT reference 2024 or past years as current.
-- If the content is brief, expand it with relevant industry context and implications.
-- The summary should be substantial and informative, NOT just 2-3 sentences."""),
-            ("user", f"Write a detailed 150-200 word summary based on this news:\n\n{news_context}")
-        ])
-        
-        chain = prompt | self.llm | self.str_parser
-        result = await chain.ainvoke({})
-        return result.strip()
-
-    async def generate_full_story(self, title: str, summary: str = "") -> str:
-        """Generate a full 400-500 word story for second/third story sections"""
-        date_context = get_current_date_context()
-        current_year = datetime.now().year
-        
-        # Build the content directly in the prompt
-        story_context = f"Title: {title}\nContext: {summary or 'No additional context'}"
-        
-        prompt = ChatPromptTemplate.from_messages([
-            ("system", f"""{date_context}
-
-You are a senior digital marketing journalist writing for a B2B newsletter.
-Write clearly and simply. Use active voice. Avoid corporate buzzwords, —  dashes, and phrases like "delve into" or "furthermore." Every sentence should add value, not filler.
-Write a compelling 400-500 word article that:
-- Opens with a strong hook
-- Explains the news and its context
-- Discusses the business implications
-- Provides actionable insights for marketers
-- Ends with a forward-looking statement
-
-IMPORTANT: We are in {current_year}. Do NOT reference 2024 or past years as current.
-
-TONE: Professional but engaging, informative but not dry.
-FORMAT: Use short paragraphs (2-3 sentences each) for readability."""),
-            ("user", f"Write a 400-500 word article about:\n\n{story_context}")
+Write naturally as if explaining to a colleague over coffee."""),
+            ("user", f"Write a 150-200 word summary with proper markdown formatting:\n\n{news_context}")
         ])
         
         chain = prompt | self.llm | self.str_parser
@@ -162,32 +159,48 @@ FORMAT: Use short paragraphs (2-3 sentences each) for readability."""),
         prompt = ChatPromptTemplate.from_messages([
             ("system", f"""{date_context}
 
-You are a senior digital marketing thought leader writing the main feature article for a prestigious B2B newsletter.
-Write clearly and simply. Use active voice. Avoid corporate buzzwords, —  dashes, and phrases like "delve into" or "furthermore." Every sentence should add value, not filler.
-Write a polished, newsletter-ready 250-350 word article that flows naturally.
+You are a digital marketing thought leader writing the main feature for a prestigious newsletter. Write 250-350 words that sound expertly crafted but naturally human.
+
+WRITING STYLE:
+- Write like a seasoned industry expert
+- Mix short punchy sentences with flowing explanations
+- Be confident and insightful, not generic
+- Use specific examples over vague statements
+- Sound conversational yet authoritative
+- Vary sentence length and structure naturally
+
+FORBIDDEN PHRASES/STYLE:
+- NO em dashes (—)
+- NO semicolons
+- NO overused AI transitions: "furthermore," "moreover," "however" starting sentences
+- NO clichés: "game-changer," "revolutionary," "cutting-edge," "delve into," "in today's landscape"
+- NO corporate buzzwords: "ecosystem," "synergy," "leverage," "seamlessly," "robust," "holistic"
+- NO generic filler sentences that say nothing specific
+
+MARKDOWN FORMATTING:
+- Use **bold** for 4-6 key terms/phrases (don't overdo it)
+- Use ### for "Key Takeaways" section heading only
+- Break into 4-5 short paragraphs (2-4 sentences each)
+- Leave blank lines between paragraphs
+- Use bullet points (- ) ONLY for the takeaways section (2-3 bullets)
+- Each bullet should start with an action verb and be specific
 
 STRUCTURE:
-1. OPENING (2-3 sentences): Hook the reader with a compelling statement about the topic's significance
-2. ANALYSIS (2 paragraphs): Provide insights and industry context for {current_year}. Use **bold** sparingly for 2-3 key terms only
-3. ACTIONABLE TAKEAWAYS: Include a brief section with 2-3 bullet points starting with action verbs
-4. CLOSING (1-2 sentences): End with a forward-looking statement
+1. **Opening** (2-3 sentences): Compelling hook about the topic's significance
+2. **Context & Analysis** (2 paragraphs): Deep insights with specifics about {current_year} trends
+3. **### Key Takeaways** (2-3 bullet points): Actionable advice starting with verbs
+4. **Closing** (1-2 sentences): Forward-looking statement or powerful conclusion
 
-FORMATTING RULES:
-- Write in flowing paragraphs, NOT a wall of text
-- Use ### only once for the "Actionable Takeaways" section heading
-- Use **bold** for max 2-3 key phrases per paragraph (don't over-bold)
-- Use bullet points (- ) ONLY for the takeaways section
-- Keep paragraphs short: 2-4 sentences each
-- NO excessive formatting or markdown headers throughout
+CONTENT REQUIREMENTS:
+- Word count: 250-350 words
+- Reference {current_year} trends and data
+- Include specific numbers or examples where possible
+- Make it actionable - readers should learn something valuable
+- Sound authoritative but not stuffy
+- Use "you" to speak directly to readers occasionally
 
-STYLE:
-- Professional yet conversational tone
-- Avoid jargon overload
-- Be specific with examples when possible
-- Sound authoritative but accessible
-
-IMPORTANT: We are in {current_year}. Reference {current_year} trends, not past years."""),
-            ("user", f"Write a polished 250-350 word newsletter feature article about:\n\n{article_context}")
+Write as if you're the industry expert everyone turns to for insights."""),
+            ("user", f"Write a polished 250-350 word feature article with markdown:\n\n{article_context}")
         ])
         
         chain = prompt | self.llm | self.str_parser
@@ -200,14 +213,75 @@ IMPORTANT: We are in {current_year}. Reference {current_year} trends, not past y
         prompt = ChatPromptTemplate.from_messages([
             ("system", f"""{date_context}
 
-You are a digital marketing editor. Write a punchy one-liner (max 15 words) that captures the essence of this news.
+You are a newsletter editor writing punchy one-liners. Write a concise summary (max 15 words) that captures the essence of this news.
 
-STYLE: Concise, impactful, informative. No fluff."""),
+STYLE:
+- Direct and impactful
+- Conversational but professional
+- NO unnecessary words or fluff
+- NO em dashes, NO colons, NO complex punctuation
+- Just state the key point clearly
+
+Write like you're texting a colleague the most important detail."""),
             ("user", "Write a one-liner for:\n\n{title}")
         ])
         
         chain = prompt | self.llm | self.str_parser
         result = await chain.ainvoke({"title": title})
+        return result.strip()
+
+    async def generate_editor_note(self, content: str, max_words: int = 200, paragraphs: int = 3) -> str:
+        """Generate a 'Notes from the Editor' section based on newsletter content"""
+        date_context = get_current_date_context()
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", f"""{date_context}
+
+You are Victor Huynh, Director at ReadyArtwork, writing a personal note to your newsletter readers.
+
+Write a warm, engaging "Notes from the Editor" that sounds authentically human and personal.
+
+WRITING STYLE:
+- Write like you're emailing a friend in your industry
+- Be warm, approachable, and genuine
+- Mix short and medium sentences naturally
+- Share your actual perspective, not generic observations
+- Use "I" and "we" - make it personal
+- Show personality while staying professional
+
+CRITICAL PUNCTUATION RULES:
+- ABSOLUTELY NO em dashes (—) anywhere in your writing - USE A COMMA OR PERIOD INSTEAD
+- ABSOLUTELY NO en dashes (–) either
+- NO semicolons
+- Use commas, periods, or the word "and" to connect ideas
+- Use simple punctuation only: periods, commas, question marks, exclamation points
+
+FORBIDDEN PHRASES/STYLE:
+- NO corporate speak: "delve," "leverage," "ecosystem," "seamlessly"
+- NO overused transitions: "furthermore," "moreover," "in addition"
+- NO generic observations that could apply to any newsletter
+
+STRUCTURE:
+- Write EXACTLY {paragraphs} paragraphs
+- Maximum {max_words} words total
+- Paragraph 1: Open with a personal observation or hook about this week's themes
+- Paragraph 2: Connect the stories to what you're seeing in the industry
+- Paragraph 3: Close with why this matters or what you're watching next
+- Leave blank lines between paragraphs
+
+CONTENT:
+- Reference specific stories from the newsletter naturally
+- Share your genuine perspective on trends
+- Make it feel like insider insights from someone in the know
+- End on a forward-looking or thoughtful note
+
+FINAL REMINDER: Do NOT use em dashes (—) or en dashes (–). Use commas or periods instead.
+
+Write like Victor actually sat down and wrote this - personal, insightful, and real."""),
+            ("user", "Write a 'Notes from the Editor' based on this newsletter content:\n\n{content}")
+        ])
+        
+        chain = prompt | self.llm | self.str_parser
+        result = await chain.ainvoke({"content": content})
         return result.strip()
 
     async def generate_news_impact(
@@ -222,14 +296,20 @@ STYLE: Concise, impactful, informative. No fluff."""),
         prompt = ChatPromptTemplate.from_messages([
             ("system", f"""{date_context}
 
-You are a digital marketing expert. Analyze news impact for business owners.
-Write clearly and simply. Use active voice. Avoid corporate buzzwords, —  dashes, and phrases like "delve into" or "furthermore." Every sentence should add value, not filler.
-Provide:
-1. whyItMatters: 1-2 sentence explanation of business impact
-2. actionItems: Array of 1-2 specific actions
+You are a digital marketing consultant analyzing news for business owners. Be specific and actionable.
 
-Respond in valid JSON with keys whyItMatters and actionItems.
-Keep under 80 words total."""),
+WRITING STYLE:
+- Write clearly and directly
+- Be specific, not vague
+- Use simple language
+- NO em dashes, NO jargon, NO filler
+- Focus on real business impact
+
+Provide valid JSON with:
+1. "whyItMatters": 1-2 specific sentences on business impact (not generic)
+2. "actionItems": Array of 1-2 concrete actions (start with action verbs)
+
+Total under 80 words. Be specific and useful."""),
             ("user", """News Article:
 Title: {title}
 Description: {description}
