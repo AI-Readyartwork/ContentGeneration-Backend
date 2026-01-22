@@ -57,15 +57,6 @@ class GenerateHookTitleResponse(BaseModel):
     hook_title: str
 
 
-class GenerateFullStoryRequest(BaseModel):
-    title: str
-    summary: str = ""
-
-
-class GenerateFullStoryResponse(BaseModel):
-    story: str
-
-
 class GenerateMainArticleRequest(BaseModel):
     title: str
     summary: str = ""
@@ -81,6 +72,16 @@ class GenerateOneLinerRequest(BaseModel):
 
 class GenerateOneLinerResponse(BaseModel):
     one_liner: str
+
+
+class GenerateEditorNoteRequest(BaseModel):
+    content: str
+    max_words: int = 300
+    paragraphs: int = 3
+
+
+class GenerateEditorNoteResponse(BaseModel):
+    note: str
 
 
 @router.post("/news-impact", response_model=NewsImpactResponse)
@@ -141,19 +142,6 @@ async def generate_description(request: GenerateDescriptionRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/generate-full-story", response_model=GenerateFullStoryResponse)
-async def generate_full_story(request: GenerateFullStoryRequest):
-    """Generate a 400-500 word story for second/third story sections"""
-    try:
-        result = await ai_service.generate_full_story(
-            title=request.title,
-            summary=request.summary
-        )
-        return GenerateFullStoryResponse(story=result)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
 @router.post("/generate-main-article", response_model=GenerateMainArticleResponse)
 async def generate_main_article(request: GenerateMainArticleRequest):
     """Generate the main article (600-800 words) for after Trendsetter section"""
@@ -173,5 +161,19 @@ async def generate_one_liner(request: GenerateOneLinerRequest):
     try:
         result = await ai_service.generate_one_liner(request.title)
         return GenerateOneLinerResponse(one_liner=result)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/generate-editor-note", response_model=GenerateEditorNoteResponse)
+async def generate_editor_note(request: GenerateEditorNoteRequest):
+    """Generate a 'Notes from the Editor' section (max 300 words, 3 paragraphs)"""
+    try:
+        result = await ai_service.generate_editor_note(
+            content=request.content,
+            max_words=request.max_words,
+            paragraphs=request.paragraphs
+        )
+        return GenerateEditorNoteResponse(note=result)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
