@@ -148,10 +148,14 @@ Write naturally as if explaining to a colleague over coffee."""),
         result = await chain.ainvoke({})
         return result.strip()
 
-    async def generate_main_article(self, title: str, summary: str = "") -> str:
-        """Generate the main article (250-350 words) for after Trendsetter section"""
+    async def generate_main_article(self, title: str, summary: str = "", word_count: int = 300) -> str:
+        """Generate the main article with customizable word count (default 250-350 words for main article)"""
         date_context = get_current_date_context()
         current_year = datetime.now().year
+        
+        # Calculate word range based on word_count parameter
+        min_words = max(50, word_count - 50)
+        max_words = word_count + 50
         
         # Build the content directly in the prompt
         article_context = f"Title: {title}\nContext: {summary or 'No additional context'}"
@@ -159,7 +163,7 @@ Write naturally as if explaining to a colleague over coffee."""),
         prompt = ChatPromptTemplate.from_messages([
             ("system", f"""{date_context}
 
-You are a digital marketing thought leader writing the main feature for a prestigious newsletter. Write 250-350 words that sound expertly crafted but naturally human.
+You are a digital marketing thought leader writing the main feature for a prestigious newsletter. Write {min_words}-{max_words} words that sound expertly crafted but naturally human.
 
 WRITING STYLE:
 - Write like a seasoned industry expert
@@ -192,7 +196,7 @@ STRUCTURE:
 4. **Closing** (1-2 sentences): Forward-looking statement or powerful conclusion
 
 CONTENT REQUIREMENTS:
-- Word count: 250-350 words
+- Word count: {min_words}-{max_words} words (CRITICAL - stay within this range!)
 - Reference {current_year} trends and data
 - Include specific numbers or examples where possible
 - Make it actionable - readers should learn something valuable
@@ -200,7 +204,7 @@ CONTENT REQUIREMENTS:
 - Use "you" to speak directly to readers occasionally
 
 Write as if you're the industry expert everyone turns to for insights."""),
-            ("user", f"Write a polished 250-350 word feature article with markdown:\n\n{article_context}")
+            ("user", f"Write a polished {min_words}-{max_words} word feature article with markdown:\n\n{article_context}")
         ])
         
         chain = prompt | self.llm | self.str_parser

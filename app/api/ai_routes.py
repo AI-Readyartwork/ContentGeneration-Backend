@@ -60,6 +60,7 @@ class GenerateHookTitleResponse(BaseModel):
 class GenerateMainArticleRequest(BaseModel):
     title: str
     summary: str = ""
+    word_count: int = 300
 
 
 class GenerateMainArticleResponse(BaseModel):
@@ -144,11 +145,12 @@ async def generate_description(request: GenerateDescriptionRequest):
 
 @router.post("/generate-main-article", response_model=GenerateMainArticleResponse)
 async def generate_main_article(request: GenerateMainArticleRequest):
-    """Generate the main article (600-800 words) for after Trendsetter section"""
+    """Generate article with customizable word count (default 250-350 words)"""
     try:
         result = await ai_service.generate_main_article(
             title=request.title,
-            summary=request.summary
+            summary=request.summary,
+            word_count=request.word_count
         )
         return GenerateMainArticleResponse(article=result)
     except Exception as e:
