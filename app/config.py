@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     ACTIVECAMPAIGN_SENDER_NAME: str = "Ready Artwork"
     ACTIVECAMPAIGN_SENDER_EMAIL: str = "ai@readyartwork.com"
     
+    # n8n Webhook (optional - for triggering n8n workflows)
+    N8N_NEWS_WEBHOOK: str = ""
+    
     # CORS - comma-separated string
     CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3000"
     
