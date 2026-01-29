@@ -73,6 +73,11 @@ Write a comprehensive 600-800 word feature article that:
 - Provides 3-4 actionable takeaways
 - Ends with a thought-provoking conclusion
 
+CRITICAL PUNCTUATION RULES:
+- ABSOLUTELY FORBIDDEN: NO em dashes (—) or en dashes (–) anywhere - USE COMMAS OR PERIODS INSTEAD
+- If you need to connect ideas, use commas, periods, or the word "and"
+- NO semicolons
+
 IMPORTANT: We are in {current_year}. Do NOT reference 2024 or past years as current.
 
 TONE: {{style}}, authoritative, insightful
@@ -97,7 +102,9 @@ Supporting Context:
                 "why_it_matters": main_story.why_it_matters or "Impact to be determined",
                 "supporting_context": supporting_context or "No additional context"
             })
-            return result.strip()
+            # Post-process to remove any em dashes that might have slipped through
+            result = result.replace('—', ',').replace('–', '-').strip()
+            return result
         except Exception as e:
             print(f"Error generating article: {e}")
             return ""
@@ -124,6 +131,11 @@ Write a {{word_count}} word article that:
 - Provides actionable insights
 - Ends with a forward-looking statement
 
+CRITICAL PUNCTUATION RULES:
+- ABSOLUTELY FORBIDDEN: NO em dashes (—) or en dashes (–) anywhere - USE COMMAS OR PERIODS INSTEAD
+- If you need to connect ideas, use commas, periods, or the word "and"
+- NO semicolons
+
 IMPORTANT: We are in {current_year}. Do NOT reference 2024 or past years as current.
 
 Use short paragraphs (2-3 sentences) for readability."""),
@@ -138,7 +150,9 @@ Use short paragraphs (2-3 sentences) for readability."""),
                 "title": title,
                 "summary": summary or "No additional context"
             })
-            return result.strip()
+            # Post-process to remove any em dashes that might have slipped through
+            result = result.replace('—', ',').replace('–', '-').strip()
+            return result
         except Exception as e:
             print(f"Error generating story: {e}")
             return ""
@@ -158,7 +172,9 @@ Write a punchy one-liner (max 15 words) that captures the essence of this news. 
         
         try:
             result = await chain.ainvoke({"title": title})
-            return result.strip()
+            # Post-process to remove any em dashes that might have slipped through
+            result = result.replace('—', ',').replace('–', '-').strip()
+            return result
         except Exception as e:
             print(f"Error generating one-liner: {e}")
             return title
@@ -180,6 +196,11 @@ Write a 2-3 sentence summary that:
 4. Uses active voice
 5. Ends with a hook or question
 
+CRITICAL PUNCTUATION RULES:
+- ABSOLUTELY FORBIDDEN: NO em dashes (—) or en dashes (–) anywhere - USE COMMAS OR PERIODS INSTEAD
+- If you need to connect ideas, use commas, periods, or the word "and"
+- NO semicolons
+
 IMPORTANT: We are in {current_year}. Do NOT reference 2024 or past years as current."""),
             ("user", "Create a catchy summary for:\n\nTitle: {{title}}\nOriginal Summary: {{summary}}")
         ])
@@ -191,7 +212,9 @@ IMPORTANT: We are in {current_year}. Do NOT reference 2024 or past years as curr
                 "title": item.title,
                 "summary": item.summary or "No summary provided"
             })
-            return result.strip()
+            # Post-process to remove any em dashes that might have slipped through
+            result = result.replace('—', ',').replace('–', '-').strip()
+            return result
         except Exception as e:
             print(f"Error generating catchy summary: {e}")
             return item.summary

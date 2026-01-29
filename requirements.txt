@@ -11,4 +11,8 @@ langchain==0.3.14
 langchain-core==0.3.63
 langchain-openai==0.3.0
 apscheduler==3.10.4
+<<<<<<< HEAD
 supabase>=2.27.0
+=======
+supabase==2.3.4
+>>>>>>> 3e7e482db0c0f2011439ebd00e64dd6213aea111
