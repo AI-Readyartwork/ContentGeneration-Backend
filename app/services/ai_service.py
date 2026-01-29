@@ -119,11 +119,13 @@ WRITING STYLE:
 - Start some sentences with context or transition words naturally
 - No need to add title in starting
 FORBIDDEN PHRASES/STYLE:
-- NO em dashes (—)
+- ABSOLUTELY FORBIDDEN: NO em dashes (—) or en dashes (–) anywhere - USE COMMAS OR PERIODS INSTEAD
 - NO semicolons
 - NO phrases like: "delve into," "dive into," "in today's landscape," "it's worth noting," "furthermore," "moreover," "additionally," "however" at sentence starts
 - NO overuse of "also," "as well," "in fact"
 - NO corporate buzzwords: "ecosystem," "synergy," "leverage," "robust," "seamlessly"
+
+CRITICAL: If you need to connect ideas, use commas, periods, or the word "and". NEVER use em dashes (—) or en dashes (–).
 
 MARKDOWN FORMATTING:
 - Use **bold** for 3-4 key terms or phrases only
@@ -146,7 +148,9 @@ Write naturally as if explaining to a colleague over coffee."""),
         
         chain = prompt | self.llm | self.str_parser
         result = await chain.ainvoke({})
-        return result.strip()
+        # Post-process to remove any em dashes that might have slipped through
+        result = result.replace('—', ',').replace('–', '-').strip()
+        return result
 
     async def generate_main_article(self, title: str, summary: str = "", word_count: int = 300) -> str:
         """Generate the main article with customizable word count (default 250-350 words for main article)"""
@@ -174,12 +178,14 @@ WRITING STYLE:
 - Vary sentence length and structure naturally
 
 FORBIDDEN PHRASES/STYLE:
-- NO em dashes (—)
+- ABSOLUTELY FORBIDDEN: NO em dashes (—) or en dashes (–) anywhere - USE COMMAS OR PERIODS INSTEAD
 - NO semicolons
 - NO overused AI transitions: "furthermore," "moreover," "however" starting sentences
 - NO clichés: "game-changer," "revolutionary," "cutting-edge," "delve into," "in today's landscape"
 - NO corporate buzzwords: "ecosystem," "synergy," "leverage," "seamlessly," "robust," "holistic"
 - NO generic filler sentences that say nothing specific
+
+CRITICAL: If you need to connect ideas, use commas, periods, or the word "and". NEVER use em dashes (—) or en dashes (–).
 
 MARKDOWN FORMATTING:
 - Use **bold** for 4-6 key terms/phrases (don't overdo it)
@@ -209,7 +215,9 @@ Write as if you're the industry expert everyone turns to for insights."""),
         
         chain = prompt | self.llm | self.str_parser
         result = await chain.ainvoke({})
-        return result.strip()
+        # Post-process to remove any em dashes that might have slipped through
+        result = result.replace('—', ',').replace('–', '-').strip()
+        return result
 
     async def generate_one_liner(self, title: str) -> str:
         """Generate a one-liner summary for Trendsetter/Top News sections"""
@@ -232,9 +240,11 @@ Write like you're texting a colleague the most important detail."""),
         
         chain = prompt | self.llm | self.str_parser
         result = await chain.ainvoke({"title": title})
-        return result.strip()
+        # Post-process to remove any em dashes that might have slipped through
+        result = result.replace('—', ',').replace('–', '-').strip()
+        return result
 
-    async def generate_editor_note(self, content: str, max_words: int = 200, paragraphs: int = 3) -> str:
+    async def generate_editor_note(self, content: str, max_words: int = 180, paragraphs: int = 3) -> str:
         """Generate a 'Notes from the Editor' section based on newsletter content"""
         date_context = get_current_date_context()
         prompt = ChatPromptTemplate.from_messages([
@@ -266,7 +276,7 @@ FORBIDDEN PHRASES/STYLE:
 
 STRUCTURE:
 - Write EXACTLY {paragraphs} paragraphs
-- Maximum {max_words} words total
+- Maximum {max_words} words total to 200 words strict.
 - Paragraph 1: Open with a personal observation or hook about this week's themes
 - Paragraph 2: Connect the stories to what you're seeing in the industry
 - Paragraph 3: Close with why this matters or what you're watching next
@@ -286,7 +296,9 @@ Write like Victor actually sat down and wrote this - personal, insightful, and r
         
         chain = prompt | self.llm | self.str_parser
         result = await chain.ainvoke({"content": content})
-        return result.strip()
+        # Post-process to remove any em dashes that might have slipped through
+        result = result.replace('—', ',').replace('–', '-').strip()
+        return result
 
     async def generate_news_impact(
         self,
