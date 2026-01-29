@@ -244,7 +244,7 @@ Write like you're texting a colleague the most important detail."""),
         result = result.replace('—', ',').replace('–', '-').strip()
         return result
 
-    async def generate_editor_note(self, content: str, max_words: int = 150, paragraphs: int = 3) -> str:
+    async def generate_editor_note(self, content: str, max_words: int = 180, paragraphs: int = 3) -> str:
         """Generate a 'Notes from the Editor' section based on newsletter content"""
         date_context = get_current_date_context()
         prompt = ChatPromptTemplate.from_messages([
@@ -276,7 +276,7 @@ FORBIDDEN PHRASES/STYLE:
 
 STRUCTURE:
 - Write EXACTLY {paragraphs} paragraphs
-- Maximum {max_words} words total
+- Maximum {max_words} words total to 200 words strict.
 - Paragraph 1: Open with a personal observation or hook about this week's themes
 - Paragraph 2: Connect the stories to what you're seeing in the industry
 - Paragraph 3: Close with why this matters or what you're watching next
