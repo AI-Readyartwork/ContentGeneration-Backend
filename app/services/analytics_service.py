@@ -22,8 +22,9 @@ class AnalyticsService:
         self.base_url = settings.ACTIVECAMPAIGN_URL
         self.api_key = settings.ACTIVECAMPAIGN_API_KEY
         
-        if not self.base_url or not self.api_key:
-            raise ValueError("ActiveCampaign URL and API Key must be configured")
+        # Check if URL and API key are configured (not None and not empty string)
+        if not self.base_url or not self.api_key or self.base_url.strip() == "" or self.api_key.strip() == "":
+            raise ValueError("ActiveCampaign URL and API Key must be configured. Please set ACTIVECAMPAIGN_URL and ACTIVECAMPAIGN_API_KEY environment variables.")
         
         self.base_url = self.base_url.rstrip('/')
         
@@ -32,7 +33,7 @@ class AnalyticsService:
             "Content-Type": "application/json"
         }
     
-    def _handle_response(self, response, operation_name: str) -> dict:
+    def _handle_response(self, response, operation_name: str, request_url: str = "") -> dict:
         """Handle API response and raise descriptive errors."""
         if response.status_code >= 400:
             try:
@@ -46,36 +47,59 @@ class AnalyticsService:
             except:
                 error_msg = response.text or f"HTTP {response.status_code}"
             
+            # Log detailed error information
+            logger.error(
+                f"{operation_name} failed: {error_msg} (HTTP {response.status_code})"
+                + (f" | URL: {request_url}" if request_url else "")
+                + f" | Response: {response.text[:500] if response.text else 'No response body'}"
+            )
+            
             raise Exception(f"{operation_name} failed: {error_msg} (HTTP {response.status_code})")
         
         return response.json()
     
-    async def get_campaigns(self, limit: int = 100, offset: int = 0) -> List[dict]:
+    async def get_campaigns(self, limit: int = 500, offset: int = 0) -> List[dict]:
         """
         Fetch all campaigns with their performance metrics.
         
         Returns:
             List of campaign objects with stats
         """
+        # Double-check configuration before making API call
+        if not self.base_url or not self.api_key or not self.base_url.strip() or not self.api_key.strip():
+            raise ValueError("ActiveCampaign URL and API Key must be configured. Please set ACTIVECAMPAIGN_URL and ACTIVECAMPAIGN_API_KEY environment variables.")
+        
         async with httpx.AsyncClient() as client:
-            response = await client.get(
-                f"{self.base_url}/api/3/campaigns",
-                headers=self.headers,
-                params={"limit": limit, "offset": offset},
-                timeout=30.0
-            )
-            data = self._handle_response(response, "Get campaigns")
+            try:
+                request_url = f"{self.base_url}/api/3/campaigns"
+                logger.debug(f"Fetching campaigns: URL={request_url}, limit={limit}, offset={offset}")
+                response = await client.get(
+                    request_url,
+                    headers=self.headers,
+                    params={"limit": limit, "offset": offset},
+                    timeout=30.0
+                )
+                data = self._handle_response(response, "Get campaigns", request_url)
+            except Exception as e:
+                # If API call fails, it might be due to invalid credentials
+                error_msg = str(e)
+                if "401" in error_msg or "403" in error_msg or "Unauthorized" in error_msg:
+                    raise ValueError(f"ActiveCampaign authentication failed. Please check your API credentials. Error: {error_msg}")
+                raise ValueError(f"Failed to connect to ActiveCampaign API. Please verify ACTIVECAMPAIGN_URL is correct. Error: {error_msg}")
             
             campaigns = []
             for campaign in data.get("campaigns", []):
                 # Parse campaign data with all metrics
+                # Ensure all string fields handle None values
+                sdate = campaign.get("sdate") or ""
+                cdate = campaign.get("cdate") or ""
                 campaigns.append({
-                    "id": campaign.get("id"),
-                    "name": campaign.get("name", ""),
-                    "type": campaign.get("type", ""),
+                    "id": str(campaign.get("id", "")),
+                    "name": campaign.get("name") or "",
+                    "type": campaign.get("type") or "",
                     "status": self._get_status_label(campaign.get("status", "0")),
-                    "sendDate": campaign.get("sdate", ""),
-                    "createdDate": campaign.get("cdate", ""),
+                    "sendDate": sdate,
+                    "createdDate": cdate,
                     
                     # Core metrics
                     "totalSends": int(campaign.get("send_amt", 0) or 0),
@@ -125,23 +149,36 @@ class AnalyticsService:
             Campaign object with full metrics
         """
         async with httpx.AsyncClient() as client:
-            response = await client.get(
-                f"{self.base_url}/api/3/campaigns/{campaign_id}",
-                headers=self.headers,
-                timeout=30.0
-            )
-            data = self._handle_response(response, "Get campaign")
+            request_url = f"{self.base_url}/api/3/campaigns/{campaign_id}"
+            logger.info(f"Fetching campaign by ID: {campaign_id} | URL: {request_url}")
+            try:
+                response = await client.get(
+                    request_url,
+                    headers=self.headers,
+                    timeout=30.0
+                )
+                data = self._handle_response(response, "Get campaign", request_url)
+            except Exception as e:
+                logger.error(
+                    f"Failed to fetch campaign {campaign_id}: {str(e)} | "
+                    f"URL: {request_url} | "
+                    f"Base URL: {self.base_url}"
+                )
+                raise
             
             campaign = data.get("campaign", {})
             
+            # Ensure all string fields handle None values
+            sdate = campaign.get("sdate") or ""
+            cdate = campaign.get("cdate") or ""
             return {
-                "id": campaign.get("id"),
-                "name": campaign.get("name", ""),
-                "type": campaign.get("type", ""),
+                "id": str(campaign.get("id", "")),
+                "name": campaign.get("name") or "",
+                "type": campaign.get("type") or "",
                 "status": self._get_status_label(campaign.get("status", "0")),
-                "sendDate": campaign.get("sdate", ""),
-                "createdDate": campaign.get("cdate", ""),
-                "subject": campaign.get("subject", ""),
+                "sendDate": sdate,
+                "createdDate": cdate,
+                "subject": campaign.get("subject") or "",
                 
                 # Core metrics
                 "totalSends": int(campaign.get("send_amt", 0) or 0),
@@ -189,12 +226,13 @@ class AnalyticsService:
             List of link objects with click counts
         """
         async with httpx.AsyncClient() as client:
+            request_url = f"{self.base_url}/api/3/campaigns/{campaign_id}/links"
             response = await client.get(
-                f"{self.base_url}/api/3/campaigns/{campaign_id}/links",
+                request_url,
                 headers=self.headers,
                 timeout=30.0
             )
-            data = self._handle_response(response, "Get campaign links")
+            data = self._handle_response(response, "Get campaign links", request_url)
             
             links = []
             for link in data.get("links", []):
@@ -219,12 +257,13 @@ class AnalyticsService:
             List of lists with subscriber counts
         """
         async with httpx.AsyncClient() as client:
+            request_url = f"{self.base_url}/api/3/lists"
             response = await client.get(
-                f"{self.base_url}/api/3/lists",
+                request_url,
                 headers=self.headers,
                 timeout=30.0
             )
-            data = self._handle_response(response, "Get lists")
+            data = self._handle_response(response, "Get lists", request_url)
             
             lists = []
             for lst in data.get("lists", []):
