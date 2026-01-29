@@ -76,9 +76,10 @@ class ActiveCampaignService:
     async def get_lists(self) -> list[dict]:
         """
         Fetch all subscriber lists from ActiveCampaign using v3 API.
+        Also fetches active subscriber counts for each list.
         
         Returns:
-            List of dicts with 'id' and 'name' for each list
+            List of dicts with 'id', 'name', and 'subscriber_count' for each list
         """
         async with httpx.AsyncClient() as client:
             response = await client.get(
@@ -88,10 +89,36 @@ class ActiveCampaignService:
             )
             data = self._handle_response_v3(response, "Get lists")
             
-            return [
-                {"id": lst["id"], "name": lst["name"]}
-                for lst in data.get("lists", [])
-            ]
+            lists = []
+            for lst in data.get("lists", []):
+                list_id = lst["id"]
+                subscriber_count = 0
+                
+                # Fetch contact count for this list using contacts endpoint with listid filter
+                try:
+                    count_response = await client.get(
+                        f"{self.base_url}/api/3/contacts",
+                        params={
+                            "listid": list_id,  # Filter by specific list
+                            "status": 1,  # Active/subscribed contacts only
+                            "limit": 1  # We only need the meta.total count
+                        },
+                        headers=self.headers_v3,
+                        timeout=30.0
+                    )
+                    if count_response.status_code == 200:
+                        count_data = count_response.json()
+                        subscriber_count = int(count_data.get("meta", {}).get("total", 0) or 0)
+                except Exception as e:
+                    logger.warning(f"Failed to get subscriber count for list {list_id}: {e}")
+                
+                lists.append({
+                    "id": list_id,
+                    "name": lst["name"],
+                    "subscriber_count": subscriber_count
+                })
+            
+            return lists
     
     async def get_addresses(self) -> list[dict]:
         """

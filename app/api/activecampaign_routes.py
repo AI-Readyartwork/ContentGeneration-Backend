@@ -16,6 +16,7 @@ class ACList(BaseModel):
     """Subscriber list from ActiveCampaign"""
     id: str
     name: str
+    subscriberCount: int = 0
 
 
 class ACAddress(BaseModel):
@@ -70,7 +71,11 @@ async def get_lists():
         
         # Transform to match frontend expectations
         lists = [
-            ACList(id=str(list_item.get("id", "")), name=list_item.get("name", ""))
+            ACList(
+                id=str(list_item.get("id", "")), 
+                name=list_item.get("name", ""),
+                subscriberCount=list_item.get("subscriber_count", 0)
+            )
             for list_item in lists_data
         ]
         
