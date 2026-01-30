@@ -24,7 +24,10 @@ class Settings(BaseSettings):
     ACTIVECAMPAIGN_API_KEY: str = ""
     ACTIVECAMPAIGN_SENDER_NAME: str = "Ready Artwork"
     ACTIVECAMPAIGN_SENDER_EMAIL: str = "ai@readyartwork.com"
-    
+    # Editorial digest / newsletter campaigns (comma-separated IDs and name pattern)
+    EDITORIAL_DIGEST_CAMPAIGN_IDS: str = ""
+    EDITORIAL_DIGEST_CAMPAIGN_NAME_PATTERN: str = "Weekly Newsletter"
+
     # n8n Webhook (optional - for triggering n8n workflows)
     N8N_NEWS_WEBHOOK: str = ""
     
